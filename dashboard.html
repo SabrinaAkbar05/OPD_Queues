@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OPD Smart Queue — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700;900&family=Noto+Nastaliq+Urdu:wght@400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary:       #0E7C7B;
+    --primary-dark:  #0a5e5d;
+    --primary-light: #e8f5f5;
+    --accent:        #F4A225;
+    --accent-dark:   #d48a10;
+    --danger:        #D62828;
+    --danger-light:  #fdeaea;
+    --success:       #2D6A4F;
+    --success-light: #e8f5ef;
+    --warn:          #e67e22;
+    --text:          #1A1A2E;
+    --text-muted:    #6b7280;
+    --surface:       #fff;
+    --bg:            #F0F4F4;
+    --border:        #d1dede;
+    --shadow:        0 2px 16px rgba(14,124,123,0.10);
+    --radius:        14px;
+    --radius-sm:     8px;
+    --font:          'Noto Sans', sans-serif;
+    --font-urdu:     'Noto Nastaliq Urdu', serif;
+    --font-mono:     'Space Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 16px;
+  }
+
+  /* ── NAVIGATION ── */
+  .nav {
+    background: var(--primary);
+    display: flex;
+    gap: 4px;
+    padding: 0 12px;
+    overflow-x: auto;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    align-items: center;
+  }
+  .nav-tabs-group { display: flex; gap: 4px; flex: 1; }
+  .nav-tab {
+    padding: 14px 18px;
+    color: rgba(255,255,255,0.7);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+  }
+  .nav-tab:hover { color: white; background: rgba(255,255,255,0.1); }
+  .nav-tab.active { color: white; border-bottom-color: var(--accent); }
+
+  /* User info + logout in nav */
+  .nav-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 4px 8px 12px;
+    border-left: 1px solid rgba(255,255,255,0.2);
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  .nav-user-name { color: rgba(255,255,255,0.9); font-size: 13px; font-weight: 600; white-space: nowrap; }
+  #logout-btn {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+  }
+  #logout-btn:hover { background: rgba(255,255,255,0.3); }
+
+  /* ── PANELS ── */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ── HEADER BANNER ── */
+  .header-banner {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    padding: 24px 20px 20px;
+    text-align: center;
+    position: relative;
+  }
+  .header-banner .clinic-icon { font-size: 36px; margin-bottom: 8px; }
+  .header-banner h1  { font-size: 20px; font-weight: 700; }
+  .header-banner p   { font-size: 13px; opacity: 0.85; margin-top: 4px; }
+  .header-banner .urdu-title {
+    font-family: var(--font-urdu);
+    font-size: 18px;
+    margin-top: 4px;
+    display: none;
+  }
+  .lang-toggle {
+    position: absolute; top: 16px; right: 16px;
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.4);
+    color: white; padding: 6px 12px;
+    border-radius: 20px; font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .lang-toggle:hover { background: rgba(255,255,255,0.35); }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin: 16px;
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(14,124,123,0.08);
+  }
+  .card-title {
+    font-size: 13px; font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.8px;
+    margin-bottom: 14px;
+  }
+
+  /* ── FORMS ── */
+  .form-group { margin-bottom: 16px; }
+  .form-label { display: block; font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  .form-label .urdu-label { font-family: var(--font-urdu); font-size: 13px; color: var(--text-muted); display: none; }
+  .form-input {
+    width: 100%; padding: 13px 16px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 16px; font-family: var(--font);
+    color: var(--text); background: #fafafa;
+    transition: border-color 0.2s; outline: none;
+  }
+  .form-input:focus { border-color: var(--primary); background: white; }
+  .form-input::placeholder { color: #adb5bd; }
+  select.form-input { cursor: pointer; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px; padding: 15px 24px;
+    border-radius: var(--radius-sm);
+    font-size: 16px; font-weight: 700;
+    cursor: pointer; border: none;
+    transition: all 0.2s; width: 100%; letter-spacing: 0.3px;
+    font-family: var(--font);
+  }
+  .btn-primary  { background: var(--primary);  color: white; }
+  .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(14,124,123,0.3); }
+  .btn-accent   { background: var(--accent);   color: var(--text); }
+  .btn-accent:hover { background: var(--accent-dark); }
+  .btn-danger   { background: var(--danger);   color: white; }
+  .btn-danger:hover { background: #b52020; }
+  .btn-outline  { background: transparent; color: var(--primary); border: 2px solid var(--primary); }
+  .btn-outline:hover { background: var(--primary-light); }
+  .btn-success  { background: var(--success);  color: white; }
+  .btn-sm { padding: 9px 16px; font-size: 13px; width: auto; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+  /* ── UTILITY ── */
+  .row { display: flex; gap: 10px; }
+  .mt-8  { margin-top: 8px; }
+  .mt-12 { margin-top: 12px; }
+  .text-muted { color: var(--text-muted); font-size: 13px; }
+  .text-center { text-align: center; }
+
+  /* ── TOKEN HERO ── */
+  .token-hero {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    border-radius: var(--radius); padding: 28px 20px;
+    text-align: center; color: white; margin: 16px;
+    box-shadow: 0 6px 24px rgba(14,124,123,0.3);
+  }
+  .token-label  { font-size: 13px; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px; }
+  .token-number { font-family: var(--font-mono); font-size: 72px; font-weight: 700; line-height: 1; margin: 10px 0; text-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+  .token-sub    { font-size: 14px; opacity: 0.85; }
+
+  /* ── QUEUE STATS ── */
+  .queue-stats {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px; margin: 16px;
+  }
+  .stat-card {
+    background: var(--surface); border-radius: var(--radius-sm);
+    padding: 16px; text-align: center; box-shadow: var(--shadow);
+    border: 1px solid rgba(14,124,123,0.08);
+  }
+  .stat-number { font-family: var(--font-mono); font-size: 36px; font-weight: 700; color: var(--primary); }
+  .stat-label  { font-size: 12px; color: var(--text-muted); margin-top: 4px; font-weight: 600; }
+
+  /* ── PROGRESS BAR ── */
+  .progress-wrap { margin: 0 16px 8px; }
+  .progress-label { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-muted); margin-bottom: 6px; }
+  .progress-bar   { height: 10px; background: #e9ecef; border-radius: 20px; overflow: hidden; }
+  .progress-fill  { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 20px; transition: width 0.8s ease; }
+
+  /* ── DOCTOR STATUS BADGE ── */
+  .doctor-status {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 16px; border-radius: 30px;
+    font-size: 14px; font-weight: 600;
+    width: fit-content; margin: 0 auto;
+  }
+  .status-available   { background: var(--success-light); color: var(--success); }
+  .status-break       { background: #fff3cd; color: #856404; }
+  .status-unavailable { background: var(--danger-light); color: var(--danger); }
+  .status-dot  { width: 10px; height: 10px; border-radius: 50%; animation: pulse 1.5s infinite; }
+  .dot-green   { background: var(--success); }
+  .dot-yellow  { background: var(--warn); animation: none; }
+  .dot-red     { background: var(--danger); animation: none; }
+  @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.6; transform:scale(1.2); } }
+
+  /* ── QUEUE LIST ── */
+  .queue-list { list-style: none; }
+  .queue-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; border-radius: var(--radius-sm);
+    margin-bottom: 8px; background: #fafafa;
+    border: 1px solid var(--border); transition: all 0.2s;
+  }
+  .queue-item:hover   { background: var(--primary-light); border-color: var(--primary); }
+  .queue-item.current { background: var(--primary-light); border-color: var(--primary); border-left: 4px solid var(--primary); }
+  .qi-token { font-family: var(--font-mono); font-weight: 700; color: var(--primary); font-size: 15px; min-width: 60px; }
+  .qi-name  { font-size: 14px; font-weight: 500; flex: 1; padding: 0 12px; }
+  .qi-wait  { font-size: 12px; color: var(--text-muted); }
+
+  /* ── ALERTS ── */
+  .alert {
+    border-radius: var(--radius-sm); padding: 12px 16px;
+    font-size: 14px; font-weight: 500;
+    display: flex; align-items: flex-start; gap: 10px;
+    margin: 0 16px 12px;
+  }
+  .alert-info    { background: #e8f4fd; color: #0c5460; border: 1px solid #bee5eb; }
+  .alert-warn    { background: #fff3cd; color: #856404; border: 1px solid #ffc107; }
+  .alert-success { background: var(--success-light); color: var(--success); border: 1px solid #a8d5bb; }
+  .alert-icon    { font-size: 18px; flex-shrink: 0; }
+
+  /* ── DISPLAY SCREEN ── */
+  .display-screen {
+    background: #0a0f1a; border-radius: var(--radius);
+    padding: 28px 20px; margin: 16px; text-align: center;
+    color: white; box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  .display-now-label { font-size: 12px; letter-spacing: 3px; color: rgba(255,255,255,0.5); text-transform: uppercase; }
+  .display-serving   { font-size: 14px; color: rgba(255,255,255,0.7); margin: 4px 0 2px; }
+  .display-number    {
+    font-family: var(--font-mono); font-size: 88px; font-weight: 700;
+    color: var(--accent); line-height: 1;
+    text-shadow: 0 0 30px rgba(244,162,37,0.5);
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+  @keyframes glow { from { text-shadow: 0 0 20px rgba(244,162,37,0.4); } to { text-shadow: 0 0 40px rgba(244,162,37,0.7); } }
+  .display-next       { display: flex; gap: 12px; justify-content: center; margin-top: 16px; }
+  .display-next-token {
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+    border-radius: var(--radius-sm); padding: 10px 20px;
+    font-family: var(--font-mono); font-size: 22px; font-weight: 700;
+    color: rgba(255,255,255,0.8);
+  }
+  .display-footer { margin-top: 16px; font-size: 13px; color: rgba(255,255,255,0.45); }
+
+  /* ── TOAST ── */
+  #toast-container {
+    position: fixed; top: 70px; right: 16px;
+    z-index: 9999; display: flex; flex-direction: column;
+    gap: 8px; max-width: 320px;
+  }
+  .toast {
+    background: var(--text); color: white;
+    padding: 12px 16px; border-radius: var(--radius-sm);
+    font-size: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    animation: slideIn 0.3s ease; border-left: 4px solid var(--accent);
+  }
+  @keyframes slideIn { from { transform: translateX(100%); opacity:0; } to { transform:translateX(0); opacity:1; } }
+
+  /* ── INNER TABS ── */
+  .inner-tabs { display: flex; gap: 4px; background: #eef2f2; border-radius: 10px; padding: 4px; margin: 16px 16px 0; }
+  .inner-tab  {
+    flex: 1; padding: 9px; border-radius: 7px; text-align: center;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: all 0.2s; color: var(--text-muted);
+  }
+  .inner-tab.active { background: white; color: var(--primary); box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+
+  /* ── SECTION DIVIDER ── */
+  .section-divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 20px 16px 12px; color: var(--text-muted);
+    font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+  }
+  .section-divider::before,.section-divider::after { content:''; flex:1; height:1px; background:var(--border); }
+
+  /* ── BADGES ── */
+  .badge         { display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 700; font-family: var(--font-mono); }
+  .badge-primary { background: var(--primary-light); color: var(--primary); }
+  .badge-accent  { background: #fffbeb; color: var(--accent-dark); border: 2px solid var(--accent); }
+
+  /* ── SMS SIM ── */
+  .sms-bubble { background: #dcf8c6; border-radius: 12px 12px 12px 0; padding: 10px 14px; font-size: 14px; line-height: 1.5; color: #111; max-width: 85%; margin: 8px 0; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+  .sms-sender { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+  /* ── URDU ── */
+  body.urdu-mode { direction: rtl; }
+  body.urdu-mode .form-input { font-family: var(--font-urdu); }
+  body.urdu-mode .en-text    { display: none !important; }
+  body.urdu-mode .ur-text    { display: block !important; }
+  body.urdu-mode .urdu-title { display: block; }
+  body.urdu-mode .urdu-label { display: inline; }
+  body.urdu-mode .header-banner h1 { display: none; }
+  .ur-text { display: none; }
+  .en-text { display: block; }
+  body.urdu-mode .lang-toggle::after { content: 'English'; }
+  .lang-toggle::after { content: 'اردو'; }
+
+  /* ── LOADING OVERLAY ── */
+  #loading-overlay {
+    position: fixed; inset: 0; background: var(--primary);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    color: white; z-index: 9999;
+    transition: opacity 0.5s;
+  }
+  #loading-overlay .spin {
+    width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.3);
+    border-top-color: white; border-radius: 50%;
+    animation: spin 0.8s linear infinite; margin-bottom: 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loading-overlay p { font-size: 15px; opacity: 0.85; }
+</style>
+</head>
+<body>
+
+<!-- ── LOADING OVERLAY (shown until auth resolves) ── -->
+<div id="loading-overlay">
+  <div class="spin"></div>
+  <p>Connecting to OPD Queue…</p>
+</div>
+
+<!-- ── NAVIGATION ── -->
+<nav class="nav" id="main-nav">
+  <div class="nav-tabs-group">
+    <!-- Each tab has data-role-required so JS can hide it for unauthorised roles -->
+    <div class="nav-tab active" data-panel="patient"      data-role-required="patient,receptionist,doctor"
+         onclick="showPanel('patient')">🧑‍🤝‍🧑 Patient</div>
+    <div class="nav-tab"       data-panel="receptionist"  data-role-required="receptionist"
+         onclick="showPanel('receptionist')">📋 Reception</div>
+    <div class="nav-tab"       data-panel="doctor"        data-role-required="doctor"
+         onclick="showPanel('doctor')">👨‍⚕️ Doctor</div>
+    <div class="nav-tab"       data-panel="display"       data-role-required="patient,receptionist,doctor"
+         onclick="showPanel('display')">📺 Display</div>
+    <div class="nav-tab"       data-panel="sms"           data-role-required="patient,receptionist,doctor"
+         onclick="showPanel('sms')">💬 SMS</div>
+  </div>
+
+  <!-- User info + logout -->
+  <div class="nav-user">
+    <span class="nav-user-name">👤 <span class="user-name-display">…</span></span>
+    <button id="logout-btn">Logout</button>
+  </div>
+</nav>
+
+<!-- ── TOAST CONTAINER ── -->
+<div id="toast-container"></div>
+
+<!-- ════════════════════════════════════════════════
+     PANEL 1: PATIENT PORTAL
+════════════════════════════════════════════════ -->
+<div class="panel active" id="panel-patient">
+
+  <div class="header-banner">
+    <button class="lang-toggle" onclick="toggleLang()"></button>
+    <div class="clinic-icon">🏥</div>
+    <h1 class="en-text">OPD Smart Queue System</h1>
+    <div class="urdu-title">او پی ڈی قطار سسٹم</div>
+    <p class="en-text">Shifa General Hospital, Karachi</p>
+    <p class="ur-text" style="font-family:var(--font-urdu); display:none;">شفا جنرل ہسپتال، کراچی</p>
+  </div>
+
+  <div class="inner-tabs" id="patient-inner-tabs">
+    <div class="inner-tab active" onclick="patientTab('register')">Get Token</div>
+    <div class="inner-tab"       onclick="patientTab('status')">My Status</div>
+  </div>
+
+  <!-- REGISTER SUB-PANEL -->
+  <div id="patient-register">
+    <div class="card" style="margin-top:16px;">
+      <div class="card-title">
+        <span class="en-text">📝 Patient Registration</span>
+        <span class="ur-text" style="font-family:var(--font-urdu); display:none;">مریض کا اندراج</span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">
+          <span class="en-text">Full Name</span>
+          <span class="ur-text" style="font-family:var(--font-urdu);">پورا نام</span>
+        </label>
+        <input type="text" id="pat-name" class="form-input" placeholder="e.g. Amina Bibi">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">
+          <span class="en-text">Mobile Number</span>
+          <span class="ur-text" style="font-family:var(--font-urdu);">موبائل نمبر</span>
+        </label>
+        <input type="tel" id="pat-phone" class="form-input" placeholder="0311-1234567">
+        <p class="text-muted mt-8">📱 SMS alert will be sent when your turn is near</p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">
+          <span class="en-text">Select Doctor</span>
+          <span class="ur-text" style="font-family:var(--font-urdu);">ڈاکٹر منتخب کریں</span>
+        </label>
+        <select id="pat-doctor" class="form-input">
+          <option value="imran">Dr. Imran Ali — General OPD (Room 3)</option>
+          <option value="nadia">Dr. Nadia Khan — Gynaecology (Room 5)</option>
+          <option value="tariq">Dr. Tariq Hassan — Cardiology (Room 7)</option>
+        </select>
+      </div>
+
+      <button class="btn btn-primary" onclick="generateToken()">
+        🎫 <span class="en-text">GET MY TOKEN</span>
+        <span class="ur-text" style="font-family:var(--font-urdu); display:none;">نمبر حاصل کریں</span>
+      </button>
+
+      <div class="alert alert-info mt-12">
+        <span class="alert-icon">💬</span>
+        <span>No smartphone? Text <strong>TOKEN</strong> to <strong>0300-1234567</strong> to get your token via SMS.</span>
+      </div>
+    </div>
+
+    <!-- Token result (shown after registration) -->
+    <div id="token-result" style="display:none;">
+      <div class="token-hero">
+        <div class="token-label en-text">YOUR TOKEN NUMBER</div>
+        <div class="token-label ur-text" style="font-family:var(--font-urdu); display:none;">آپ کا قطار نمبر</div>
+        <div class="token-number" id="my-token">—</div>
+        <div class="token-sub"   id="token-doctor-label">Dr. Imran Ali — General OPD</div>
+      </div>
+
+      <div class="queue-stats">
+        <div class="stat-card">
+          <div class="stat-number" id="ahead-count">—</div>
+          <div class="stat-label en-text">People Ahead</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="wait-time">—</div>
+          <div class="stat-label en-text">Est. Minutes</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px;">
+        <p style="font-size:14px; color:var(--text-muted);">🔔 You'll receive an SMS alert when <strong>3 patients</strong> are ahead of you.</p>
+        <button class="btn btn-outline mt-12" onclick="patientTab('status')">📊 View Live Queue Status</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATUS SUB-PANEL -->
+  <div id="patient-status" style="display:none;">
+    <div class="card" style="margin-top:16px;">
+      <div class="card-title">🔴 LIVE QUEUE STATUS</div>
+
+      <div style="text-align:center; margin-bottom:14px;">
+        <div class="doctor-status status-available" id="pat-doctor-badge">
+          <div class="status-dot dot-green"></div>
+          <span>Dr. Imran Ali — Available</span>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+        <div class="stat-card">
+          <div class="stat-label" style="font-size:11px;">NOW SERVING</div>
+          <div class="stat-number" id="now-serving" style="font-size:28px;">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label" style="font-size:11px;">YOUR TOKEN</div>
+          <div class="stat-number" id="my-token-live" style="font-size:28px; color:var(--accent);">—</div>
+        </div>
+      </div>
+
+      <div class="progress-wrap" style="margin:0 0 12px;">
+        <div class="progress-label">
+          <span id="status-ahead-text">—</span>
+          <span id="status-wait-text">—</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="status-progress" style="width:0%"></div></div>
+      </div>
+
+      <div id="queue-upcoming">
+        <div class="section-divider">UPCOMING</div>
+        <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;" id="upcoming-tokens"></div>
+      </div>
+
+      <div id="break-alert" style="display:none; margin-top:12px;">
+        <div class="alert alert-warn">
+          <span class="alert-icon">⏸️</span>
+          <span>Doctor is currently on a break. Queue will resume soon.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /panel-patient -->
+
+<!-- ════════════════════════════════════════════════
+     PANEL 2: RECEPTIONIST DASHBOARD
+════════════════════════════════════════════════ -->
+<div class="panel" id="panel-receptionist">
+
+  <div class="header-banner">
+    <div class="clinic-icon">📋</div>
+    <h1>Reception Dashboard</h1>
+    <p>Welcome, <span class="user-name-display">Receptionist</span> — Shifa General Hospital</p>
+  </div>
+
+  <div class="queue-stats" style="margin-top:16px;">
+    <div class="stat-card"><div class="stat-number" id="rec-total">0</div><div class="stat-label">Today's Patients</div></div>
+    <div class="stat-card"><div class="stat-number" id="rec-waiting">0</div><div class="stat-label">Waiting Now</div></div>
+    <div class="stat-card"><div class="stat-number" id="rec-served">0</div><div class="stat-label">Served</div></div>
+    <div class="stat-card"><div class="stat-number" id="rec-avg">2m</div><div class="stat-label">Avg Wait</div></div>
+  </div>
+
+  <!-- Doctor Status Control -->
+  <div class="card">
+    <div class="card-title">🩺 Doctor Status Control</div>
+    <div style="text-align:center; margin-bottom:14px;">
+      <div class="doctor-status status-available" id="rec-doc-badge" style="margin:0 auto 12px;">
+        <div class="status-dot dot-green"></div>
+        <span id="rec-doc-status-text">Dr. Imran Ali — Available</span>
+      </div>
+    </div>
+    <div class="row">
+      <button class="btn btn-success btn-sm" onclick="setDoctorStatus('available')">✅ Available</button>
+      <button class="btn btn-outline  btn-sm" onclick="setDoctorStatus('break')" style="color:var(--warn); border-color:var(--warn);">⏸ On Break</button>
+      <button class="btn btn-danger   btn-sm" onclick="setDoctorStatus('unavailable')">❌ Done for Day</button>
+    </div>
+  </div>
+
+  <!-- Register new patient -->
+  <div class="card">
+    <div class="card-title">➕ Register New Patient</div>
+    <div class="form-group">
+      <label class="form-label">Patient Name</label>
+      <input type="text" id="rec-name" class="form-input" placeholder="Full name">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Phone Number</label>
+      <input type="tel" id="rec-phone" class="form-input" placeholder="0311-1234567">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Assign to Doctor</label>
+      <select id="rec-doctor" class="form-input">
+        <option value="imran">Dr. Imran Ali — General OPD</option>
+        <option value="nadia">Dr. Nadia Khan — Gynaecology</option>
+        <option value="tariq">Dr. Tariq Hassan — Cardiology</option>
+      </select>
+    </div>
+    <button class="btn btn-accent" onclick="registerPatient()">🎫 Generate Token & Assign</button>
+  </div>
+
+  <!-- Queue Management -->
+  <div class="card">
+    <div class="card-title">📋 Queue Management</div>
+    <div style="background:var(--primary-light); border-radius:var(--radius-sm); padding:14px; margin-bottom:14px; border:1px solid rgba(14,124,123,0.2);">
+      <div style="font-size:12px; color:var(--primary); font-weight:700; margin-bottom:4px;">NOW SERVING</div>
+      <div style="font-family:var(--font-mono); font-size:32px; font-weight:700; color:var(--primary);" id="rec-now-serving">—</div>
+      <div style="font-size:13px; color:var(--text-muted);" id="rec-current-patient">—</div>
+    </div>
+    <div class="row mt-8">
+      <button class="btn btn-primary" onclick="callNext()">▶ Call Next</button>
+      <button class="btn btn-outline" onclick="skipCurrent()">⏭ Skip</button>
+    </div>
+    <button class="btn btn-outline mt-8" id="pause-btn" onclick="toggleQueuePause()" style="color:var(--warn); border-color:var(--warn);">⏸ Pause Queue</button>
+  </div>
+
+  <!-- Waiting list -->
+  <div class="card">
+    <div class="card-title">👥 Waiting List (<span id="waiting-count">0</span>)</div>
+    <ul class="queue-list" id="waiting-list"></ul>
+    <p id="empty-list-msg" class="text-muted text-center" style="padding:16px;">No patients in queue yet.</p>
+  </div>
+
+</div><!-- /panel-receptionist -->
+
+<!-- ════════════════════════════════════════════════
+     PANEL 3: DOCTOR PANEL
+════════════════════════════════════════════════ -->
+<div class="panel" id="panel-doctor">
+
+  <div class="header-banner">
+    <div class="clinic-icon">👨‍⚕️</div>
+    <h1>Doctor Panel</h1>
+    <p>Welcome, Dr. <span class="user-name-display">…</span> — Shifa General Hospital</p>
+  </div>
+
+  <div class="queue-stats" style="margin-top:16px;">
+    <div class="stat-card"><div class="stat-number" id="doc-waiting">0</div><div class="stat-label">Waiting</div></div>
+    <div class="stat-card"><div class="stat-number" id="doc-done">0</div><div class="stat-label">Done Today</div></div>
+  </div>
+
+  <!-- Current Patient -->
+  <div class="card">
+    <div class="card-title">🔴 CURRENT PATIENT</div>
+    <div id="doc-current-empty" class="text-muted text-center" style="padding:16px;">No patient in room. Click "Call Next" to begin.</div>
+    <div id="doc-current-patient" style="display:none;">
+      <div style="background:var(--primary-light); border-radius:var(--radius-sm); padding:16px; margin-bottom:14px;">
+        <div style="font-family:var(--font-mono); font-size:28px; font-weight:700; color:var(--primary);" id="doc-token">—</div>
+        <div style="font-size:17px; font-weight:600; margin-top:4px;" id="doc-name">—</div>
+        <div style="font-size:13px; color:var(--text-muted);" id="doc-phone">—</div>
+        <div style="font-size:13px; color:var(--text-muted); margin-top:4px;" id="doc-wait-display">—</div>
+      </div>
+      <button class="btn btn-success" onclick="markDone()">✅ Consultation Done — Call Next</button>
+    </div>
+  </div>
+
+  <!-- Next Up -->
+  <div class="card">
+    <div class="card-title">📋 NEXT IN QUEUE</div>
+    <ul class="queue-list" id="doc-queue-list"></ul>
+    <p id="doc-empty-msg" class="text-muted text-center" style="padding:8px;">Queue is empty.</p>
+  </div>
+
+  <!-- Break Control -->
+  <div class="card">
+    <div class="card-title">⏸ BREAK CONTROL</div>
+    <div class="form-group">
+      <label class="form-label">Break Duration</label>
+      <select id="break-duration" class="form-input">
+        <option value="10">10 minutes</option>
+        <option value="15" selected>15 minutes</option>
+        <option value="20">20 minutes</option>
+        <option value="30">30 minutes</option>
+      </select>
+    </div>
+    <button class="btn btn-outline" id="doc-break-btn" onclick="doctorBreak()" style="color:var(--warn); border-color:var(--warn);">⏸ Go on Break (Patients Will Be Notified)</button>
+  </div>
+
+</div><!-- /panel-doctor -->
+
+<!-- ════════════════════════════════════════════════
+     PANEL 4: DISPLAY SCREEN
+════════════════════════════════════════════════ -->
+<div class="panel" id="panel-display">
+
+  <div class="header-banner">
+    <div class="clinic-icon">📺</div>
+    <h1>Public Display Screen</h1>
+    <p>As shown on clinic TV / monitor</p>
+  </div>
+
+  <div class="display-screen">
+    <div class="display-now-label">ابھی — NOW SERVING</div>
+    <div class="display-number" id="display-number">—</div>
+    <div class="display-serving">Dr. Imran Ali — Room 3</div>
+
+    <div style="margin-top:20px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.1);">
+      <div style="font-size:11px; color:rgba(255,255,255,0.4); letter-spacing:2px; margin-bottom:10px;">NEXT TOKENS — اگلے نمبر</div>
+      <div class="display-next" id="display-next"></div>
+    </div>
+
+    <div style="margin-top:16px; padding-top:14px; border-top:1px solid rgba(255,255,255,0.1);">
+      <div class="doctor-status" id="display-doc-status" style="margin:0 auto; background:rgba(45,106,79,0.3); color:#6fcf97;">
+        <div class="status-dot dot-green"></div>
+        <span>Doctor Available — ڈاکٹر دستیاب ہے</span>
+      </div>
+    </div>
+
+    <div class="display-footer">
+      Patients Waiting: <span id="display-waiting">0</span> &nbsp;|&nbsp; Avg Wait: <span id="display-avg">—</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">ℹ️ About This Screen</div>
+    <p class="text-muted" style="font-size:14px; line-height:1.6;">This screen is shown on a large TV/monitor at the clinic entrance. Patients can see the current token being served, next 3 tokens, and doctor availability — without approaching the reception desk.</p>
+  </div>
+
+</div><!-- /panel-display -->
+
+<!-- ════════════════════════════════════════════════
+     PANEL 5: SMS SIMULATOR
+════════════════════════════════════════════════ -->
+<div class="panel" id="panel-sms">
+
+  <div class="header-banner">
+    <div class="clinic-icon">💬</div>
+    <h1>SMS Fallback Simulator</h1>
+    <p>For patients without smartphones</p>
+  </div>
+
+  <div class="alert alert-info" style="margin:16px 16px 0;">
+    <span class="alert-icon">ℹ️</span>
+    <span>This shows how SMS-based queue management works for feature phone users — no internet required.</span>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📱 Simulate SMS Registration</div>
+    <div class="form-group">
+      <label class="form-label">Your Phone Number</label>
+      <input type="tel" id="sms-phone" class="form-input" placeholder="0311-1234567">
+    </div>
+    <div class="row">
+      <button class="btn btn-primary" onclick="smsSimulate('TOKEN')">Send "TOKEN"</button>
+      <button class="btn btn-outline" onclick="smsSimulate('STATUS')">Send "STATUS"</button>
+    </div>
+    <div class="row mt-8">
+      <button class="btn btn-outline" onclick="smsSimulate('CANCEL')">Send "CANCEL"</button>
+      <button class="btn btn-outline" onclick="smsSimulate('HELP')">Send "HELP"</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📩 SMS Conversation</div>
+    <div id="sms-chat" style="min-height:120px; padding:4px 0;"></div>
+    <p id="sms-empty" class="text-muted text-center" style="padding:12px;">Send a keyword above to see SMS simulation.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📖 SMS Keywords Guide</div>
+    <table style="width:100%; font-size:14px; border-collapse:collapse;">
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 4px; font-weight:700; color:var(--primary);">TOKEN</td>
+        <td style="padding:8px 4px;">Get a new token in queue</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 4px; font-weight:700; color:var(--primary);">STATUS</td>
+        <td style="padding:8px 4px;">Check your current position</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:8px 4px; font-weight:700; color:var(--primary);">CANCEL</td>
+        <td style="padding:8px 4px;">Cancel your token</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 4px; font-weight:700; color:var(--primary);">HELP</td>
+        <td style="padding:8px 4px;">List all commands (Urdu)</td>
+      </tr>
+    </table>
+  </div>
+
+</div><!-- /panel-sms -->
+
+<!-- ── Load app.js as an ES module ── -->
+<script type="module" src="./app.js"></script>
+
+<!-- ── Hide loading overlay once app.js boots ── -->
+<script type="module">
+  import { auth } from "./firebase.js";
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+  onAuthStateChanged(auth, (user) => {
+    if (!user) {
+      window.location.href = "index.html";
+      return;
+    }
+    // Fade out and remove the loading overlay
+    const overlay = document.getElementById("loading-overlay");
+    overlay.style.opacity = "0";
+    setTimeout(() => overlay.remove(), 500);
+  });
+</script>
+
+</body>
+</html>
