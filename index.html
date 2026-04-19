@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OPD Smart Queue — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700;900&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary:       #0E7C7B;
+    --primary-dark:  #0a5e5d;
+    --primary-light: #e8f5f5;
+    --accent:        #F4A225;
+    --danger:        #D62828;
+    --success:       #2D6A4F;
+    --text:          #1A1A2E;
+    --text-muted:    #6b7280;
+    --border:        #d1dede;
+    --bg:            #F0F4F4;
+    --surface:       #fff;
+    --radius:        14px;
+    --radius-sm:     8px;
+    --shadow:        0 4px 24px rgba(14,124,123,0.13);
+    --font:          'Noto Sans', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .login-wrap {
+    width: 100%;
+    max-width: 420px;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: 36px 24px 28px;
+    text-align: center;
+    color: white;
+  }
+  .hero-icon   { font-size: 48px; margin-bottom: 10px; }
+  .hero h1     { font-size: 22px; font-weight: 900; letter-spacing: -0.5px; }
+  .hero p      { font-size: 13px; opacity: 0.8; margin-top: 6px; }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--surface);
+    border-radius: 0 0 var(--radius) var(--radius);
+    padding: 28px 24px 32px;
+    box-shadow: var(--shadow);
+  }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex;
+    background: #eef2f2;
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 24px;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    background: transparent;
+    border-radius: 7px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: var(--font);
+  }
+  .tab-btn.active { background: white; color: var(--primary); box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+
+  /* ── FORM ── */
+  .form-group   { margin-bottom: 18px; }
+  .form-label   { display: block; font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  .form-input   {
+    width: 100%; padding: 13px 16px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 15px; font-family: var(--font);
+    color: var(--text); background: #fafafa;
+    transition: border-color 0.2s; outline: none;
+  }
+  .form-input:focus  { border-color: var(--primary); background: white; }
+  select.form-input  { cursor: pointer; }
+
+  /* role pill badges */
+  .role-pills    { display: flex; gap: 8px; }
+  .role-pill     {
+    flex: 1; padding: 10px 8px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    text-align: center; font-size: 13px;
+    font-weight: 700; cursor: pointer;
+    color: var(--text-muted); background: #fafafa;
+    transition: all 0.2s;
+  }
+  .role-pill:hover  { border-color: var(--primary); color: var(--primary); }
+  .role-pill.active { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+  .role-pill .icon  { font-size: 20px; display: block; margin-bottom: 4px; }
+
+  /* ── BUTTON ── */
+  .btn {
+    width: 100%; padding: 15px;
+    background: var(--primary); color: white;
+    border: none; border-radius: var(--radius-sm);
+    font-size: 16px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+    font-family: var(--font);
+  }
+  .btn:hover   { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(14,124,123,0.3); }
+  .btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+  /* ── MESSAGES ── */
+  .msg {
+    padding: 12px 14px; border-radius: var(--radius-sm);
+    font-size: 14px; font-weight: 500;
+    margin-bottom: 16px; display: none;
+  }
+  .msg.error   { background: #fdeaea; color: var(--danger); border: 1px solid #f8c6c6; display: block; }
+  .msg.success { background: #e8f5ef; color: var(--success); border: 1px solid #a8d5bb; display: block; }
+
+  /* ── SPINNER ── */
+  .spinner {
+    width: 18px; height: 18px;
+    border: 3px solid rgba(255,255,255,0.4);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: inline-block; vertical-align: middle; margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── FOOTER ── */
+  .login-footer {
+    text-align: center; margin-top: 18px;
+    font-size: 12px; color: var(--text-muted);
+  }
+
+  /* ── AUTO-REDIRECT OVERLAY ── */
+  /* FIX 5: shown while we check if user is already logged in */
+  #auth-check-overlay {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; color: var(--text-muted);
+    z-index: 999;
+  }
+  #auth-check-overlay.hidden { display: none; }
+</style>
+</head>
+<body>
+
+<!--
+  FIX 5: Auth-check overlay — visible while onAuthStateChanged fires.
+         If a user is already logged in, they get redirected to
+         dashboard.html before ever seeing the login form.
+         Hidden via JS once we confirm no active session.
+-->
+<div id="auth-check-overlay">
+  <span><span class="spinner" style="border-top-color:var(--primary);border-color:rgba(14,124,123,0.25);"></span> Loading…</span>
+</div>
+
+<div class="login-wrap" id="login-wrap" style="display:none;">
+
+  <!-- HERO BANNER -->
+  <div class="hero">
+    <div class="hero-icon">🏥</div>
+    <h1>OPD Smart Queue</h1>
+    <p>Shifa General Hospital, Karachi</p>
+  </div>
+
+  <!-- CARD -->
+  <div class="card">
+
+    <!-- Tab switcher -->
+    <div class="tabs">
+      <button class="tab-btn active" id="tab-login"  onclick="switchTab('login')">Login</button>
+      <button class="tab-btn"        id="tab-signup" onclick="switchTab('signup')">Sign Up</button>
+    </div>
+
+    <!-- Error / success message area -->
+    <div class="msg" id="msg-box"></div>
+
+    <!-- ── LOGIN FORM ── -->
+    <div id="form-login">
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" id="login-email" class="form-input" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" id="login-password" class="form-input" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <!--
+        FIX 1 (confirmed working): handleLogin is assigned to window.*
+        inside the <script type="module"> below, so onclick="" can find it.
+        No change needed here — this was already correct in the original.
+      -->
+      <button class="btn" id="login-btn" onclick="handleLogin()">🔑 Login</button>
+    </div>
+
+    <!-- ── SIGNUP FORM ── -->
+    <div id="form-signup" style="display:none;">
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input type="text" id="signup-name" class="form-input" placeholder="e.g. Dr. Imran Ali" autocomplete="name">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" id="signup-email" class="form-input" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password <span style="font-weight:400; color:var(--text-muted);">(min 6 chars)</span></label>
+        <input type="password" id="signup-password" class="form-input" placeholder="••••••••" autocomplete="new-password">
+      </div>
+      <div class="form-group">
+        <label class="form-label">I am a …</label>
+        <div class="role-pills">
+          <div class="role-pill active" data-role="patient"      onclick="pickRole(this)">
+            <span class="icon">🧑‍🤝‍🧑</span>Patient
+          </div>
+          <div class="role-pill"       data-role="receptionist" onclick="pickRole(this)">
+            <span class="icon">📋</span>Reception
+          </div>
+          <div class="role-pill"       data-role="doctor"       onclick="pickRole(this)">
+            <span class="icon">👨‍⚕️</span>Doctor
+          </div>
+        </div>
+      </div>
+      <button class="btn" id="signup-btn" onclick="handleSignup()">✅ Create Account</button>
+    </div>
+
+  </div><!-- /card -->
+
+  <div class="login-footer">Powered by Firebase · OPD Queue v2.0</div>
+
+</div><!-- /login-wrap -->
+
+<!--
+  FIX 2: type="module" is REQUIRED for ES module imports (import/export syntax).
+          Browsers treat <script type="module"> as deferred by default, so it
+          always runs after the DOM is fully parsed — no extra "defer" needed.
+
+  FIX 3 (Firebase version consistency): this file only imports from auth.js,
+          which in turn imports from firebase.js. All three files now use
+          exactly firebase@10.12.2. No version drift possible from this side.
+-->
+<script type="module">
+  // ── FIX 2: path must exactly match the filename on disk.
+  //    If you open index.html directly via file:// (not a local server),
+  //    ES module imports are BLOCKED by the browser's CORS policy.
+  //    Solution: serve with a local dev server, e.g.:
+  //      • VS Code Live Server extension  (right-click → Open with Live Server)
+  //      • npx serve .
+  //      • python3 -m http.server 8080
+  import { signUp, logIn, redirectByRole } from "./auth.js";
+  import { auth } from "./firebase.js";
+  import { onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+  // ── FIX 5: Auto-redirect if user is already logged in ────────────
+  // onAuthStateChanged fires once immediately with the cached auth state.
+  // If there's an active session we skip the login page entirely.
+  const overlay   = document.getElementById("auth-check-overlay");
+  const loginWrap = document.getElementById("login-wrap");
+
+  const unsub = onAuthStateChanged(auth, (user) => {
+    unsub(); // we only need the first emission
+    if (user) {
+      // Already authenticated → go straight to dashboard
+      redirectByRole();
+    } else {
+      // No session → reveal the login form, hide the overlay
+      overlay.classList.add("hidden");
+      loginWrap.style.display = "block";
+    }
+  });
+
+  // ── Tab switcher ─────────────────────────────────────────────
+  // FIX 1: assigned to window so inline onclick="" attributes can call it
+  window.switchTab = function (tab) {
+    document.getElementById("form-login").style.display  = tab === "login"  ? "block" : "none";
+    document.getElementById("form-signup").style.display = tab === "signup" ? "block" : "none";
+    document.getElementById("tab-login").classList.toggle("active",  tab === "login");
+    document.getElementById("tab-signup").classList.toggle("active", tab === "signup");
+    hideMsg();
+  };
+
+  // ── Role pill picker ─────────────────────────────────────────
+  let selectedRole = "patient";
+  window.pickRole = function (el) {
+    document.querySelectorAll(".role-pill").forEach(p => p.classList.remove("active"));
+    el.classList.add("active");
+    selectedRole = el.dataset.role;
+  };
+
+  // ── Message helpers ──────────────────────────────────────────
+  function showMsg(text, type = "error") {
+    const box = document.getElementById("msg-box");
+    box.textContent = text;
+    box.className = `msg ${type}`;
+  }
+  function hideMsg() {
+    const box = document.getElementById("msg-box");
+    box.className = "msg";
+  }
+
+  function setLoading(btnId, loading, defaultLabel) {
+    const btn = document.getElementById(btnId);
+    btn.disabled = loading;
+    btn.innerHTML = loading
+      ? `<span class="spinner"></span> Please wait…`
+      : defaultLabel;
+  }
+
+  // ── Friendly error map (shared by login + signup) ────────────
+  const FIREBASE_ERRORS = {
+    "auth/user-not-found":       "No account found with that email.",
+    "auth/wrong-password":       "Incorrect password. Please try again.",
+    "auth/invalid-credential":   "Invalid email or password. Please try again.",
+    "auth/invalid-email":        "Invalid email address.",
+    "auth/too-many-requests":    "Too many attempts. Please wait a moment.",
+    "auth/email-already-in-use": "An account with that email already exists.",
+    "auth/weak-password":        "Password is too weak (min 6 characters).",
+    "auth/network-request-failed":"Network error. Check your connection."
+  };
+
+  // ── LOGIN ────────────────────────────────────────────────────
+  // FIX 1 (confirmed): assigned to window.* so onclick="handleLogin()" works
+  window.handleLogin = async function () {
+    const email    = document.getElementById("login-email").value.trim();
+    const password = document.getElementById("login-password").value;
+
+    if (!email || !password) {
+      showMsg("Please enter your email and password.");
+      return;
+    }
+
+    setLoading("login-btn", true, "🔑 Login");
+    hideMsg();
+
+    // FIX 4: explicit try/catch — logs full error object so DevTools shows
+    //        exactly which Firebase error code fired
+    try {
+      await logIn(email, password);
+      showMsg("Login successful! Redirecting…", "success");
+      setTimeout(() => redirectByRole(), 800);
+    } catch (err) {
+      // err.code is the Firebase error code (e.g. "auth/wrong-password")
+      console.error("[index.html] handleLogin caught:", err.code, err);
+      showMsg(FIREBASE_ERRORS[err.code] || `Login failed: ${err.message}`);
+      setLoading("login-btn", false, "🔑 Login");
+    }
+  };
+
+  // ── SIGNUP ───────────────────────────────────────────────────
+  // FIX 1 (confirmed): assigned to window.*
+  window.handleSignup = async function () {
+    const name     = document.getElementById("signup-name").value.trim();
+    const email    = document.getElementById("signup-email").value.trim();
+    const password = document.getElementById("signup-password").value;
+
+    if (!name)               { showMsg("Please enter your full name."); return; }
+    if (!email)              { showMsg("Please enter your email."); return; }
+    if (password.length < 6) { showMsg("Password must be at least 6 characters."); return; }
+
+    setLoading("signup-btn", true, "✅ Create Account");
+    hideMsg();
+
+    // FIX 4: explicit try/catch with full error logging
+    try {
+      await signUp(name, email, password, selectedRole);
+      showMsg("Account created! Redirecting…", "success");
+      setTimeout(() => redirectByRole(), 800);
+    } catch (err) {
+      console.error("[index.html] handleSignup caught:", err.code, err);
+      showMsg(FIREBASE_ERRORS[err.code] || `Sign-up failed: ${err.message}`);
+      setLoading("signup-btn", false, "✅ Create Account");
+    }
+  };
+
+  // ── ENTER key shortcut ────────────────────────────────────────
+  document.addEventListener("keydown", e => {
+    if (e.key !== "Enter") return;
+    const loginVisible = document.getElementById("form-login").style.display !== "none";
+    if (loginVisible) window.handleLogin();
+    else              window.handleSignup();
+  });
+</script>
+
+</body>
+</html>
